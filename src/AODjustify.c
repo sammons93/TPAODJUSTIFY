@@ -13,7 +13,7 @@
 #include <string.h> // strlen, 
 #include <sys/mman.h> // pour mmap
 #include <sys/stat.h>
-// #include <math.h>
+#include <math.h>
 #include <stdlib.h>
 // #include <locale.h>
 #include <limits.h>
@@ -36,6 +36,55 @@ void usage(char * error_msg) {
                     "  copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>. \n") ;
    exit(-1) ;
 }
+
+
+int argmin(int* tab, int size){
+    int k=0;
+    int ind;
+    int mini = tab[k];
+    while(k < size){
+        if(tab[k+1] < mini){
+            mini = tab[k+1];
+            ind = k+1;
+        }
+        k++;
+    }
+    return ind;
+}
+
+int min(int* tab, int size){
+    int k=0;
+    int mini = tab[k];
+    while(k < size){
+        if(tab[k+1] < mini){
+            mini = tab[k+1];
+        }
+        k++;
+    }
+    return mini;
+}
+
+int Bellman(void* file, int i, int M, int* bellman_mem){
+    int* bellman_mem_i;
+    if(bellman_mem[i] == 50000){
+        for (int j = i; j <= i+M; ++j) {
+            if(file[j] == RC and file[j+1] == RC){
+                bellman_mem[i] = 0;
+            }
+        }
+        for (int j = i; j <= i+M ; ++j) {
+            if (file[j] == ES) {
+                bellman_mem_i[j-i] = Bellman(j + 1) + (M - (j - i)) ^ 3;
+            } else { bellman_mem_i[j-i] = 50000; }
+        }
+
+
+        bellman_mem[i] = min(bellman_mem_i, M);
+    }
+    return bellman_mem[i];
+}
+
+
 
 int main(int argc, char** argv) {
   if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.") ;
