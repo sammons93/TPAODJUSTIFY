@@ -30,65 +30,63 @@
  * \param error_msg message d'erreur à afficher 
  * \return void 
  */
-void usage(char * error_msg) {
-   fprintf( stderr, "AODjustify ERROR> %s\n", error_msg) ; 
-   fprintf( stderr, "AODjustify ERROR> Usage: AODjustify <M> <file> \n"
-                    "  copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>. \n") ;
-   exit(-1) ;
+void usage(char *error_msg) {
+    fprintf(stderr, "AODjustify ERROR> %s\n", error_msg);
+    fprintf(stderr, "AODjustify ERROR> Usage: AODjustify <M> <file> \n"
+            "  copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>. \n");
+    exit(-1);
 }
 
 
-int argmin(int* tab, int size){
-    int k=0;
+int argmin(int *tab, int size) {
+    int k = 0;
     int ind;
     int mini = tab[k];
-    while(k < size){
-        if(tab[k+1] < mini){
-            mini = tab[k+1];
-            ind = k+1;
+    while (k < size) {
+        if (tab[k + 1] < mini) {
+            mini = tab[k + 1];
+            ind = k + 1;
         }
         k++;
     }
     return ind;
 }
 
-int min(int* tab, int size){
-    int k=0;
+int min(int *tab, int size) {
+    int k = 0;
     int mini = tab[k];
-    while(k < size){
-        if(tab[k+1] < mini){
-            mini = tab[k+1];
+    while (k < size) {
+        if (tab[k + 1] < mini) {
+            mini = tab[k + 1];
         }
         k++;
     }
     return mini;
 }
 
-int Bellman(void* file, int i, int M, int* bellman_mem){
-    int* bellman_mem_i;
-    if(bellman_mem[i] == 50000){
-        for (int j = i; j <= i+M; ++j) {
-            if(file[j] == RC and file[j+1] == RC){
+int Bellman(void *file, int i, int M, int *bellman_mem, int **bellman_mem_inter) {
+    if (bellman_mem[i] == 50000) {
+        for (int j = i; j <= i + M; ++j) {
+            if (file[j] == RC and file[j + 1] == RC) {
                 bellman_mem[i] = 0;
             }
         }
-        for (int j = i; j <= i+M ; ++j) {
-            if (file[j] == ES) {
-                bellman_mem_i[j-i] = Bellman(j + 1) + (M - (j - i)) ^ 3;
-            } else { bellman_mem_i[j-i] = 50000; }
+        for (int j = i; j <= i + M; ++j) {
+            if (isspace(file[j])) {
+                bellman_mem_inter[i][j - i] = Bellman(j + 1) + (M - (j - i)) ^ 3;
+            } else { bellman_mem_inter[i][j - i] = 50000; }
         }
 
 
-        bellman_mem[i] = min(bellman_mem_i, M);
+        bellman_mem[i] = min(bellman_mem_inter[i], M);
     }
     return bellman_mem[i];
 }
 
 
+int main(int argc, char **argv) {
+    if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.");
 
-int main(int argc, char** argv) {
-  if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.") ;
-
-  // A vous de compléter
-  return 0 ;
+    // A vous de compléter
+    return 0;
 }
