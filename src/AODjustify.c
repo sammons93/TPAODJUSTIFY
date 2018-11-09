@@ -8,7 +8,7 @@
  * Usage AODjustify <M> <file>
  * copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>.
  */
-
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h> // strlen,
 #include <sys/mman.h> // pour mmap
@@ -21,7 +21,7 @@
 #include <fcntl.h> // open
 #include <assert.h> // assert
 #include <ctype.h> // isspace
-
+#include "AODjustify.h"
 
 
 /**
@@ -31,150 +31,167 @@
  * \param error_msg message d'erreur à afficher
  * \return void
  */
-void usage(char * error_msg) {
-   fprintf( stderr, "AODjustify ERROR> %s\n", error_msg) ;
-   fprintf( stderr, "AODjustify ERROR> Usage: AODjustify <M> <file> \n"
-                    "  copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>. \n") ;
-   exit(-1) ;
+void usage(char *error_msg) {
+    fprintf(stderr, "AODjustify ERROR> %s\n", error_msg);
+    fprintf(stderr, "AODjustify ERROR> Usage: AODjustify <M> <file> \n"
+            "  copie le fichier <file>.in dans le fichier <file>.out  en le justifiant optimalement sur une ligne de taille <M>. \n");
+    exit(-1);
 }
 
 
+static cell_bell *tab_mem;
+static long *E_glob;
 
 
-int argmin(int *tab, int size) {
-    int k = 0;
-    int ind;
-    int mini = tab[k];
-    while (k < size) {
-        if (tab[k + 1] < mini) {
-            mini = tab[k + 1];
-            ind = k + 1;
-        }
-        k++;
+long long Bellman(long long *tailles, int nb_mots, int i, long long M) {
+    if (tab_mem[i].bell != -1) {
+        return tab_mem[i].bell;
     }
-    return ind;
-}
+    int temp_ind;
+    long long temp = 0, min = 0, E_temp;
 
-int min(int *tab, int size) {
-    int k = 0;
-    int mini = tab[k];
-    while (k < size) {
-        if (tab[k + 1] < mini) {
-            mini = tab[k + 1];
-        }
-        k++;
-    }
-    return mini;
-}
+    if (E_glob[i] >= 0) {
 
-int Bellman(char *file, int i, int M, int* tab_mem, int **bellman_mem_inter) {
-    if (tab_mem[i] == -1) {
+        tab_mem[i].bell = 0;
+        tab_mem[i].ind = i;
+    } else {
+        temp_ind = i;
+        E_temp = M - tailles[i];
+        for (int k = 0; k < nb_mots; ++k) {
 
-        for (int j = i; j > i+M; ++j) {
-            if ((file[j] == 10 ) && (file[j - 1] == 10 )) {
-                    tab_mem[i] = 0;
-                    return tab_mem[i];
+            if (E_temp < 0) break;
 
-                }
+
+            temp = Bellman(tailles, nb_mots, k + 1, M) + (E_temp) ^ 3;
+
+            if (k == i) min = temp;
+
+            if (temp < min) {
+                min = temp;
+                temp_ind = k;
             }
 
-        for (int j = i; j<i+M; ++j) {
-            if (file[j] == 32) {
-                bellman_mem_inter[i][j - i -1] = Bellman(file, j + 1, M, tab_mem, bellman_mem_inter) + (M - (j - i)) ^ 3;
-            }
+            E_temp = E_temp - tailles[k+1] - 1;
         }
-        tab_mem[i] = min(bellman_mem_inter[i], M);
-        return tab_mem[i];
+        tab_mem[i].bell = min;
+        tab_mem[i].ind = temp_ind;
     }
-
+    return tab_mem[i].bell;
 }
 
-void* carac_fin_ligne( int M, int** bellman_mem_inter, int* bellman_car_fin_ligne){
-    bellman_car_fin_ligne[0] = argmin(bellman_mem_inter[0], M);
-    printf("%d\n", bellman_car_fin_ligne[0]);
-    for (int j = 0+1; j < 0 + M; ++j) {
-        bellman_car_fin_ligne[j-0] = bellman_car_fin_ligne[j-0-1] + argmin(bellman_mem_inter[bellman_car_fin_ligne[j-0-1] +1], M);
-    }
-}
 
-size_t getFilesize(const char* filename) {
+size_t getFilesize(const char *filename) {
     struct stat st;
     stat(filename, &st);
     return st.st_size;
 }
 
-int main(int argc, char** argv) {
-    if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.") ;
-    int M = atoi(argv[1]);
-    printf("%d\n", M);
+char *ecriture_out(const char *nom_in)
+{
+    size_t taille = strlen(nom_in);
+    size_t taille_copie = taille + 1;
+    char *copie = malloc((taille_copie +1)*sizeof(char));
+    uint32_t i = 0;
+    while ((nom_in[i]!= '.') && (i < taille)) {
+        copie[i] = nom_in[i];
+        i++;
+    }
+    if (i < taille) {
+        char completion[] = ".out";
+        strcat(copie,completion);
+    }
+    return copie;
+}
+
+int main(int argc, char **argv) {
+    if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.");
+    long long M = atoi(argv[1]);
     size_t filesize = getFilesize(argv[2]);
     //On ouvre le fichier et recupere sa reference
     int fd = open(argv[2], O_RDONLY, 0);
     assert(fd != -1);
     //On execute mmap
-    char* mmappedData = (char*) mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
+    char *mmappedData = (char *) mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
     assert(mmappedData != MAP_FAILED);
-
-    printf("%d\n", mmappedData[15]);
     //initialisation des tableaux de memoïsation
-    int* tab_memo;
-    tab_memo = malloc(sizeof(int) * filesize);
-    for (int l = 0; l < filesize; ++l) {
-        tab_memo[l] = -1;
-    }
-    int** bellman_mem_inter;
-    bellman_mem_inter = malloc(sizeof(int*) * filesize);
-    int* bellman_carac_fin_ligne;
-    bellman_carac_fin_ligne = malloc(sizeof(int)* filesize );
-    for (size_t i = 0; i < filesize; ++i) {
-        bellman_mem_inter[i] = malloc(sizeof(int) * M);
-        bellman_carac_fin_ligne[i] = 500000000;
-        for (int j = 0; j < M; ++j) {
-            bellman_mem_inter[i][j] = 500000000;  //+ inf
-        }
-    }
 
-    for (size_t k = 0; k < M +1 ; ++k) {
-        {
-            printf("%d,  ", bellman_mem_inter[0][k]);
-        }
-    }
-    printf("\n\n\n");
-    int cout_para = Bellman(mmappedData, 0, M, tab_memo, bellman_mem_inter);
-
-    for (size_t k = 0; k < filesize ; ++k) {
-
-
-                printf("%d,  ", tab_memo[k]);
-
-
-    }
-    printf("\n%i\n", cout_para);
-
-    exit(1);
-    carac_fin_ligne(M, bellman_mem_inter, bellman_carac_fin_ligne);
-
-//    for (int k = 0; k < M; ++k) {
-//        if (bellman_carac_fin_ligne[k] < 50000){
-//            printf("%d\n", bellman_carac_fin_ligne[k]);
-//        }
+//    tab_mem = malloc(filesize * sizeof(cell_bell));
+//    for (int i = 0; i < filesize; ++i) {
+//        tab_mem[i].bell = -1;
+//        tab_mem[i].ind = i;
 //    }
-//    printf("\n");
-//    printf("%i\n", cout_para);
-//    printf("indice du caractère de fin de ligne : %i\n", bellman_carac_fin_ligne[0]);
-//    printf("%d\n", mmappedData[bellman_carac_fin_ligne[0]]);
-//    printf("%d\n", mmappedData[bellman_carac_fin_ligne[0]+1]);
-//    printf("%d\n", (int) ceil(45/M) + 1);
+//    long long cout = Bellman(mmappedData, 0, M);
+//    printf("cout :%lld\n", cout);
+//    printf("cout 1 :%lld\n", tab_mem[45].bell);
+//    printf("ind :%d\n", tab_mem[45].ind);
+
+    const char *filepath = ecriture_out(argv[2]);
+
+    printf("%s", filepath);
+    int fdout = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); //open crée le fichier ?
+
+    if (fdout == -1)
+    {
+        perror("Error opening file for writing");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t sizeout = filesize; /// + le nb d'espaces ajoutés;
+
+    if (lseek(fdout, sizeout-1, SEEK_SET) == -1)
+    {
+        close(fdout);
+        perror("Error calling lseek() to 'stretch' the file");
+        exit(EXIT_FAILURE);
+    }
+
+    if (write(fdout, "", 1) == -1)
+    {
+        close(fdout);
+        perror("Error writing last byte of the file");
+        exit(EXIT_FAILURE);
+    }
+
+    char *map = (char*) mmap(0, sizeout, PROT_READ | PROT_WRITE, MAP_SHARED, fdout, 0);
+
+    if (map == MAP_FAILED)
+    {
+        close(fdout);
+        perror("Error mmapping the file");
+        exit(EXIT_FAILURE);
+    }
+
+
+    for (size_t i = 0; i < sizeout; i++)
+    {
+        map[i] = (char) "f"; // remplir avec Bellman;
+    }
+
+    // Write it now to disk
+    if (msync(map, sizeout, MS_SYNC) == -1)
+    {
+        perror("Could not sync the file to disk");
+    }
+
+    // Don't forget to free the mmapped memory
+    if (munmap(map, sizeout) == -1)
+    {
+        close(fdout);
+        perror("Error un-mmapping the file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Un-mmaping doesn't close the file, so we still need to do that.
+    close(fdout);
 
 
 
 
-
-    //Cleanup
+    //Cleanup in
     int rc = munmap(mmappedData, filesize);
     assert(rc == 0);
     close(fd);
 
 
-  return 0 ;
+    return 0 ;
 }
