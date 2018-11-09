@@ -1,7 +1,7 @@
 # Modele de Makefile : a adapter à vos besoins, mais rapport.pdf doit rester en haut du repertoire et
 # le fichier a tester doit correspondre aux spécifications et etre dans le repertoire ../TPAODjustify/bin/APDjustify 
 
-CC = gcc -O3 -std=c99 
+CC = gcc -O3 -std=c99 -lm 
 
 all: bin/AODjustify AODrapport-modele.pdf
 
