@@ -17,14 +17,14 @@ typedef struct {
 
 typedef struct {
     char **mots; //Tableau contenant tous les mots du paragraphe
-    int *tailles_mots;//Tableau contenant toutes les tailles des mots du paragraphe
+    long long *tailles_mots;//Tableau contenant toutes les tailles des mots du paragraphe
     int nb_mots;
     int ind_prem_car; //indice du premier caractère du paragraphe
     int ind_dern_car; //indice du dernier caractère du paragraphe
     char **lignes; //Tableau contenant toutes les lignes du paragraphe
-    int nb_lignes;
-    int nb_espaces;
-    int cout;
+    long long nb_lignes;
+    long long nb_espaces;
+    long long cout;
 } paragraphe;
 
 /**
@@ -77,7 +77,7 @@ int recup_nb_mots(char *file, int debut, int fin);
  * @param nb_mots
  * @return tailles
  */
-int *recup_tailles_mots(char *file, int debut, int fin, int nb_mots);
+long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots);
 
 
 /**
@@ -114,7 +114,7 @@ long long Bellman(int num_par, int nb_mots, int i, long long M);
  * @param M
  * @param derniere_ligne
  */
-void ecrire_ligne(int num_par, char *ligne, char **mots, int *tailles, int first, int last, long long M,
+void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int first, int last, long long M,
                   bool derniere_ligne);
 
 /**

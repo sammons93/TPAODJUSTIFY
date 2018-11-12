@@ -115,8 +115,8 @@ int recup_nb_para(char *file, int filesize) {
  * @param filesize
  * @return tableaux
  */
-int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, size_t filesize) {
-    size_t indice_caractere = 0;
+int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, int filesize) {
+    int indice_caractere = 0;
     int indice_paragraphe = 0;
     int **tableaux = malloc(2 * sizeof(int *));
     int *tab_indices_fin_paragraphes = malloc(nb_paragraphes * sizeof(int));
@@ -129,8 +129,6 @@ int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, size_t filesize) 
             } else {
                 tab_indices_fin_paragraphes[indice_paragraphe] = indice_caractere - 1;
             } //Si ca finit par trois retour chariots
-//            printf("Debut du paragraphe %i: %i\n", indice_paragraphe, tab_indices_debut_paragraphes[indice_paragraphe]);
-//            printf("Fin du paragraphe %i: %i\n", indice_paragraphe, tab_indices_fin_paragraphes[indice_paragraphe]);
             indice_paragraphe++;
         }
         indice_caractere++;
@@ -139,8 +137,6 @@ int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, size_t filesize) 
     if (!((mmappedData[indice_caractere - 1] == 10) && (mmappedData[indice_caractere] == 10))) {
         tab_indices_debut_paragraphes[indice_paragraphe + 1] = indice_caractere + 3;
         tab_indices_fin_paragraphes[indice_paragraphe] = indice_caractere;
-//        printf("Debut du paragraphe %i %i\n", indice_paragraphe, tab_indices_debut_paragraphes[indice_paragraphe]);
-//        printf("Fin du paragraphe %i %i\n", indice_paragraphe, tab_indices_fin_paragraphes[indice_paragraphe]);
     }
     tableaux[0] = tab_indices_debut_paragraphes;
     tableaux[1] = tab_indices_fin_paragraphes;
@@ -174,8 +170,8 @@ int recup_nb_mots(char *file, int debut, int fin) {
  * @param nb_mots
  * @return tailles
  */
-int *recup_tailles_mots(char *file, int debut, int fin, int nb_mots) {
-    int *tailles = malloc(sizeof(int) * nb_mots);
+long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots) {
+    long long *tailles = malloc(sizeof(int) * nb_mots);
     int i = debut;
     int j = debut;
     int k = 0;
@@ -200,7 +196,7 @@ int *recup_tailles_mots(char *file, int debut, int fin, int nb_mots) {
  * @param debut
  * @return mots
  */
-char **recup_mots(char *file, int nb_mots, int *tailles, int debut) {
+char **recup_mots(char *file, int nb_mots, long long *tailles, int debut) {
     char **mots = malloc(sizeof(char *) * nb_mots);
     int k = debut;
     for (int i = 0; i < nb_mots; ++i) {
@@ -270,7 +266,7 @@ long long Bellman(int num_par, int nb_mots, int i, long long M) {
  * @param M
  * @param derniere_ligne
  */
-void ecrire_ligne(int num_par, char *ligne, char **mots, int *tailles, int first, int last, long long M,
+void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int first, int last, long long M,
                   bool derniere_ligne) {
     int i = first;
     int j = 0; //Indice parcourant les caractères des mots
@@ -289,9 +285,9 @@ void ecrire_ligne(int num_par, char *ligne, char **mots, int *tailles, int first
             j = 0;
         }
     } else {
-        int nb_espaces_a_rajouter = E_glob[num_par][first][last];
-        int nb_espaces_rajoutes = 0;
-        int q = nb_espaces_a_rajouter / (last - first);
+        long long nb_espaces_a_rajouter = E_glob[num_par][first][last];
+        long long nb_espaces_rajoutes = 0;
+        long long q = nb_espaces_a_rajouter / (last - first);
         while (i < last) {
             while (j < tailles[i]) {
                 ligne[k] = mots[i][j];
@@ -345,7 +341,7 @@ void write_line_in_file(char *mmapOut, long long sizeout, char **lignes, long lo
  * @param M
  * @return
  */
-long long *calculs_paragraphes(int num_par, char **mots, int *tailles, int nb_mots, long long M) {
+long long *calculs_paragraphes(int num_par, char **mots, long long *tailles, int nb_mots, long long M) {
     long long *res = malloc(3 * sizeof(long long));
     int first = 0, last = 0;
     long long bell_0 = 0;
@@ -353,7 +349,7 @@ long long *calculs_paragraphes(int num_par, char **mots, int *tailles, int nb_mo
     E_glob[num_par] = malloc(sizeof(long long *) * nb_mots);
     for (int i = 0; i < nb_mots; ++i) {
         E_glob[num_par][i] = malloc(sizeof(long long) * nb_mots);
-        E_glob[num_par][i][i] = M - (long long) tailles[i];
+        E_glob[num_par][i][i] = M - tailles[i];
         int k = 0;
         while (k < nb_mots) {
             if (k < i) {
@@ -398,8 +394,8 @@ long long *calculs_paragraphes(int num_par, char **mots, int *tailles, int nb_mo
  * @param M
  * @param nb_ligne
  */
-void justifier_paragraphe(int num_par, paragraphe paragraphe, char **mots, int *tailles, int nb_mots, long long M,
-                          int nb_ligne) {
+void justifier_paragraphe(int num_par, paragraphe paragraphe, char **mots, long long *tailles, int nb_mots, long long M,
+                          long long nb_ligne) {
     int first = 0, last = 0;
     int j = 0;
     while (E_glob[num_par][first][nb_mots - 1] < 0) { //tant qu'on est pas sur la derniere ligne, on ecrit
@@ -427,11 +423,11 @@ int main(int argc, char **argv) {
 
     //On crée le paragraphe text:
     paragraphe *text;
-    int nb_par = recup_nb_para(mmappedData, filesize);
+    int nb_par = recup_nb_para(mmappedData,(int) filesize);
     text = malloc(sizeof(paragraphe) * nb_par);
     tab_mem = malloc(sizeof(cell_bell *) * nb_par);
     E_glob = malloc(sizeof(long long **) * nb_par);
-    int **tab_ind = getIndiceLastChar(mmappedData, nb_par, filesize); //On recupere les indices de debut et de fin de
+    int **tab_ind = getIndiceLastChar(mmappedData, nb_par,(int) filesize); //On recupere les indices de debut et de fin de
     //chaque paragraphe
     for (int i = 0; i < nb_par; ++i) {
         text[i].ind_prem_car = tab_ind[0][i];
@@ -443,7 +439,7 @@ int main(int argc, char **argv) {
                                                   [i].nb_mots);
         text[i].mots = recup_mots(mmappedData, text[i].nb_mots, text[i].tailles_mots, text[i].ind_prem_car);
 
-        int *tab_calculs = calculs_paragraphes(i, text[i].mots, text[i].tailles_mots, text[i].nb_mots, M);
+        long long *tab_calculs = calculs_paragraphes(i, text[i].mots, text[i].tailles_mots, text[i].nb_mots, M);
         text[i].nb_espaces = tab_calculs[1];
         text[i].nb_lignes = tab_calculs[0];
         text[i].cout = tab_calculs[2];
@@ -451,7 +447,6 @@ int main(int argc, char **argv) {
         for (int j = 0; j < text[i].nb_lignes - 1; ++j) {
             text[i].lignes[j] = malloc(sizeof(char) * (M + 1));
         }
-        printf("%i\n", text[i].cout);
         justifier_paragraphe(i, text[i], text[i].mots, text[i].tailles_mots, text[i].nb_mots, M, text[i].nb_lignes);
     }
     long long nb_lignes_tot = 0;
