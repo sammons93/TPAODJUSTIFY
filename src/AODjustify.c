@@ -62,7 +62,7 @@ size_t getFilesize(const char *filename) {
 
 long long puissance(long long a, long long b){
     long long puissance = a;
-    for (int i = 0; i < b-1 ; ++i) {
+    for (long long i = 0; i < b-1 ; ++i) {
         puissance *= a;
     }
     return puissance;
@@ -95,8 +95,8 @@ char *ecriture_out(const char *nom_in) {
  * @param filesize
  * @return nb_paragraphes
  */
-int recup_nb_para(char *file, int filesize) {
-    int nb_paragraphes = 0;
+long long recup_nb_para(char *file, long long filesize) {
+    long long nb_paragraphes = 0;
     size_t ind_caractere = 0;
     while (ind_caractere < filesize - 3) {
         if ((file[ind_caractere] == 10) && (file[ind_caractere + 1] == 10)) {
@@ -115,12 +115,12 @@ int recup_nb_para(char *file, int filesize) {
  * @param filesize
  * @return tableaux
  */
-int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, int filesize) {
-    int indice_caractere = 0;
-    int indice_paragraphe = 0;
-    int **tableaux = malloc(2 * sizeof(int *));
-    int *tab_indices_fin_paragraphes = malloc(nb_paragraphes * sizeof(int));
-    int *tab_indices_debut_paragraphes = malloc(nb_paragraphes * sizeof(int));
+long long **getIndiceLastChar(char *mmappedData, long long nb_paragraphes, long long filesize) {
+    long long indice_caractere = 0;
+    long long indice_paragraphe = 0;
+    long long **tableaux = malloc(2 * sizeof(long long *));
+    long long *tab_indices_fin_paragraphes = malloc(nb_paragraphes * sizeof(long long));
+    long long *tab_indices_debut_paragraphes = malloc(nb_paragraphes * sizeof(long long));
     while (indice_caractere < filesize - 1) {
         if ((mmappedData[indice_caractere] == 10) && (mmappedData[indice_caractere + 1] == 10)) {
             tab_indices_debut_paragraphes[indice_paragraphe + 1] = indice_caractere + 2;
@@ -151,9 +151,9 @@ int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, int filesize) {
  * @param fin
  * @return nb_mots
  */
-int recup_nb_mots(char *file, int debut, int fin) {
-    int nb_mots = 0;
-    for (int i = debut; i <= fin - 1; ++i) {
+long long recup_nb_mots(char *file, long long debut, long long fin) {
+    long long nb_mots = 0;
+    for (long long i = debut; i <= fin - 1; ++i) {
         if (((file[i] == 32) && (file[i + 1] != 32))) {
             nb_mots++;
         }
@@ -170,11 +170,11 @@ int recup_nb_mots(char *file, int debut, int fin) {
  * @param nb_mots
  * @return tailles
  */
-long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots) {
-    long long *tailles = malloc(sizeof(int) * nb_mots);
-    int i = debut;
-    int j = debut;
-    int k = 0;
+long long *recup_tailles_mots(char *file, long long debut, long long fin, long long nb_mots) {
+    long long *tailles = malloc(sizeof(long long) * nb_mots);
+    long long i = debut;
+    long long j = debut;
+    long long k = 0;
     while (k < nb_mots - 1) {
         while (file[j] != 32 || file[j + 1] == 32) {
             j++;
@@ -196,12 +196,12 @@ long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots) {
  * @param debut
  * @return mots
  */
-char **recup_mots(char *file, int nb_mots, long long *tailles, int debut) {
+char **recup_mots(char *file, long long nb_mots, long long *tailles, long long debut) {
     char **mots = malloc(sizeof(char *) * nb_mots);
-    int k = debut;
-    for (int i = 0; i < nb_mots; ++i) {
+    long long k = debut;
+    for (long long i = 0; i < nb_mots; ++i) {
         mots[i] = malloc(sizeof(char) * tailles[i]);
-        for (int j = 0; j < tailles[i]; ++j) {
+        for (long long j = 0; j < tailles[i]; ++j) {
             mots[i][j] = file[k];
             k++;
         }
@@ -222,18 +222,18 @@ char **recup_mots(char *file, int nb_mots, long long *tailles, int debut) {
  * @param M
  * @return Bellman(i)
  */
-long long Bellman(int num_par, int nb_mots, int i, long long M) {
+long long Bellman(long long num_par, long long nb_mots, long long i, long long M) {
     if (tab_mem[num_par][i].bell != -1) {
         return tab_mem[num_par][i].bell;
     }
-    int temp_ind;
+    long long temp_ind;
     long long temp = 0, min = 0;
     if (E_glob[num_par][i][nb_mots - 1] >= 0) {
         tab_mem[num_par][i].bell = 0;
         tab_mem[num_par][i].ind = i;
     } else {
         temp_ind = i;
-        for (int k = i; k < nb_mots; ++k) {
+        for (long long k = i; k < nb_mots; ++k) {
 
             if (E_glob[num_par][i][k] < 0) break;
 
@@ -266,11 +266,11 @@ long long Bellman(int num_par, int nb_mots, int i, long long M) {
  * @param M
  * @param derniere_ligne
  */
-void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int first, int last, long long M,
+void ecrire_ligne(long long num_par, char *ligne, char **mots, long long *tailles, long long first, long long last, long long M,
                   bool derniere_ligne) {
-    int i = first;
-    int j = 0; //Indice parcourant les caractères des mots
-    int k = 0; //Indice parcourant la ligne
+    long long i = first;
+    long long j = 0; //Indice parcourant les caractères des mots
+    long long k = 0; //Indice parcourant la ligne
 
     if (derniere_ligne) {
         while (i < last) {
@@ -306,7 +306,7 @@ void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int
         }
     }
 
-    for (int m = 0; m < tailles[last]; ++m) {
+    for (long long m = 0; m < tailles[last]; ++m) {
         ligne[k] = mots[last][m];
         k++;
     }
@@ -341,23 +341,23 @@ void write_line_in_file(char *mmapOut, long long sizeout, char **lignes, long lo
  * @param M
  * @return
  */
-long long *calculs_paragraphes(int num_par, char **mots, long long *tailles, int nb_mots, long long M) {
+long long *calculs_paragraphes(long long num_par, char **mots, long long *tailles, long long nb_mots, long long M) {
     long long *res = malloc(3 * sizeof(long long));
-    int first = 0, last = 0;
+    long long first = 0, last = 0;
     long long bell_0 = 0;
     long long nb_ligne = 0, nb_espaces = 0;
     E_glob[num_par] = malloc(sizeof(long long *) * nb_mots);
-    for (int i = 0; i < nb_mots; ++i) {
+    for (long long i = 0; i < nb_mots; ++i) {
         E_glob[num_par][i] = malloc(sizeof(long long) * nb_mots);
         E_glob[num_par][i][i] = M - tailles[i];
-        int k = 0;
+        long long k = 0;
         while (k < nb_mots) {
             if (k < i) {
                 E_glob[num_par][i][k] = 70000;
             }
             if (k > i) {
                 long long deltaik = tailles[k];
-                for (int j = i; j < k; ++j) {
+                for (long long j = i; j < k; ++j) {
                     deltaik += tailles[j] + 1;
                 }
                 E_glob[num_par][i][k] = M - deltaik;
@@ -367,7 +367,7 @@ long long *calculs_paragraphes(int num_par, char **mots, long long *tailles, int
     }
     tab_mem[num_par] = malloc(nb_mots * sizeof(cell_bell));
 
-    for (int i = nb_mots - 1; i >= 0; --i) { ;
+    for (long long i = nb_mots - 1; i >= 0; --i) { ;
         tab_mem[num_par][i].bell = -1;
         Bellman(num_par, nb_mots, i, M);
     }
@@ -394,10 +394,10 @@ long long *calculs_paragraphes(int num_par, char **mots, long long *tailles, int
  * @param M
  * @param nb_ligne
  */
-void justifier_paragraphe(int num_par, paragraphe paragraphe, char **mots, long long *tailles, int nb_mots, long long M,
+void justifier_paragraphe(long long num_par, paragraphe paragraphe, char **mots, long long *tailles, long long nb_mots, long long M,
                           long long nb_ligne) {
-    int first = 0, last = 0;
-    int j = 0;
+    long long first = 0, last = 0;
+    long long j = 0;
     while (E_glob[num_par][first][nb_mots - 1] < 0) { //tant qu'on est pas sur la derniere ligne, on ecrit
         last = tab_mem[num_par][first].ind;
         ecrire_ligne(num_par, paragraphe.lignes[j], mots, tailles, first, last, M, 0);
@@ -410,12 +410,12 @@ void justifier_paragraphe(int num_par, paragraphe paragraphe, char **mots, long 
 }
 
 
-int main(int argc, char **argv) {
+long long main(long long argc, char **argv) {
     if (argc != 3) usage("Mauvais nombre de paramètres dans l'appel.");
     long long M = atoi(argv[1]);
     size_t filesize = getFilesize(argv[2]);
     //On ouvre le fichier et recupere sa reference
-    int fd = open(argv[2], O_RDONLY, 0);
+    long long fd = open(argv[2], O_RDONLY, 0);
     assert(fd != -1);
     //On execute mmap
     char *mmappedData = (char *) mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -423,13 +423,13 @@ int main(int argc, char **argv) {
 
     //On crée le paragraphe text:
     paragraphe *text;
-    int nb_par = recup_nb_para(mmappedData,(int) filesize);
+    long long nb_par = recup_nb_para(mmappedData,(long long) filesize);
     text = malloc(sizeof(paragraphe) * nb_par);
     tab_mem = malloc(sizeof(cell_bell *) * nb_par);
     E_glob = malloc(sizeof(long long **) * nb_par);
-    int **tab_ind = getIndiceLastChar(mmappedData, nb_par,(int) filesize); //On recupere les indices de debut et de fin de
+    long long **tab_ind = getIndiceLastChar(mmappedData, nb_par, filesize); //On recupere les indices de debut et de fin de
     //chaque paragraphe
-    for (int i = 0; i < nb_par; ++i) {
+    for (long long i = 0; i < nb_par; ++i) {
         text[i].ind_prem_car = tab_ind[0][i];
         text[i].ind_dern_car = tab_ind[1][i];
         text[i].nb_mots = recup_nb_mots(mmappedData, text[i].ind_prem_car, text[i].ind_dern_car);
@@ -444,7 +444,7 @@ int main(int argc, char **argv) {
         text[i].nb_lignes = tab_calculs[0];
         text[i].cout = tab_calculs[2];
         text[i].lignes = malloc(sizeof(char *) * text[i].nb_lignes);
-        for (int j = 0; j < text[i].nb_lignes - 1; ++j) {
+        for (long long j = 0; j < text[i].nb_lignes - 1; ++j) {
             text[i].lignes[j] = malloc(sizeof(char) * (M + 1));
         }
         justifier_paragraphe(i, text[i], text[i].mots, text[i].tailles_mots, text[i].nb_mots, M, text[i].nb_lignes);
@@ -452,7 +452,7 @@ int main(int argc, char **argv) {
     long long nb_lignes_tot = 0;
     long long nb_espaces_tot = 0;
     long long cout_tot = 0;
-    for (int k = 0; k < nb_par; ++k) {
+    for (long long k = 0; k < nb_par; ++k) {
         cout_tot += text[k].cout;
         nb_lignes_tot += text[k].nb_lignes;
         nb_espaces_tot += text[k].nb_espaces;
@@ -460,7 +460,7 @@ int main(int argc, char **argv) {
     const char *filepath = ecriture_out(argv[2]);
 
 
-    int fdout = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0600); //open crée le fichier
+    long long fdout = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t) 0600); //open crée le fichier
 
     if (fdout == -1) {
         perror("Error opening file for writing");
@@ -484,7 +484,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    for (int l = 0; l < nb_par; ++l) {
+    for (long long l = 0; l < nb_par; ++l) {
         write_line_in_file(map, sizeout, text[l].lignes, text[l].nb_lignes, M);
     }
     // Write it now to disk
@@ -506,7 +506,7 @@ int main(int argc, char **argv) {
 
 
     //Cleanup in
-    int rc = munmap(mmappedData, filesize);
+    long long rc = munmap(mmappedData, filesize);
     assert(rc == 0);
     close(fd);
 

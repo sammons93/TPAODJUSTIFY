@@ -12,15 +12,15 @@
  */
 typedef struct {
     long long bell; // Valeur du bellman(i)
-    int ind; // L'indice du dernier mot de la ligne commençant par le mot i
+    long long ind; // L'indice du dernier mot de la ligne commençant par le mot i
 } cell_bell;
 
 typedef struct {
     char **mots; //Tableau contenant tous les mots du paragraphe
     long long *tailles_mots;//Tableau contenant toutes les tailles des mots du paragraphe
-    int nb_mots;
-    int ind_prem_car; //indice du premier caractère du paragraphe
-    int ind_dern_car; //indice du dernier caractère du paragraphe
+    long long nb_mots;
+    long long ind_prem_car; //indice du premier caractère du paragraphe
+    long long ind_dern_car; //indice du dernier caractère du paragraphe
     char **lignes; //Tableau contenant toutes les lignes du paragraphe
     long long nb_lignes;
     long long nb_espaces;
@@ -48,7 +48,7 @@ char *ecriture_out(const char *nom_in);
  * @param filesize
  * @return nb_paragraphes
  */
-int recup_nb_para(char *file, int filesize);
+long long recup_nb_para(char *file, long long filesize);
 
 /**
  * Retourne deux tableaux d'indices de debut et de fin de chaque paragraphe du fichier d'entree
@@ -57,7 +57,7 @@ int recup_nb_para(char *file, int filesize);
  * @param filesize
  * @return tableaux
  */
-int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, size_t filesize);
+long long **getIndiceLastChar(char *mmappedData, long long nb_paragraphes, long long filesize);
 
 /**
  * recupere le nombre de mots du paragraphe commençant par le caractère d'indice debut et finissant par le caractere
@@ -67,7 +67,7 @@ int **getIndiceLastChar(char *mmappedData, int nb_paragraphes, size_t filesize);
  * @param fin
  * @return nb_mots
  */
-int recup_nb_mots(char *file, int debut, int fin);
+long long recup_nb_mots(char *file, long long debut, long long fin);
 
 /**
  * Recupere le tableau des tailles des mots du paragraphe
@@ -77,7 +77,7 @@ int recup_nb_mots(char *file, int debut, int fin);
  * @param nb_mots
  * @return tailles
  */
-long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots);
+long long *recup_tailles_mots(char *file, long long debut, long long fin, long long nb_mots);
 
 
 /**
@@ -88,7 +88,7 @@ long long *recup_tailles_mots(char *file, int debut, int fin, int nb_mots);
  * @param debut
  * @return mots
  */
-char **recup_mots(char *file, int nb_mots, int *tailles, int debut);
+char **recup_mots(char *file, long long nb_mots, long long *tailles, long long debut);
 
 
 /**
@@ -100,7 +100,7 @@ char **recup_mots(char *file, int nb_mots, int *tailles, int debut);
  * @param M
  * @return Bellman(i)
  */
-long long Bellman(int num_par, int nb_mots, int i, long long M);
+long long Bellman(long long num_par, long long nb_mots, long long i, long long M);
 
 /**
  * Ecrit dans ligne la ligne du paragraphe num_par commençant par le mot d'indice first et finissant par le mot
@@ -114,7 +114,7 @@ long long Bellman(int num_par, int nb_mots, int i, long long M);
  * @param M
  * @param derniere_ligne
  */
-void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int first, int last, long long M,
+void ecrire_ligne(long long num_par, char *ligne, char **mots, long long *tailles, long long first, long long last, long long M,
                   bool derniere_ligne);
 
 /**
@@ -128,7 +128,7 @@ void ecrire_ligne(int num_par, char *ligne, char **mots, long long *tailles, int
  * @param M
  * @return
  */
-long long *calculs_paragraphes(int num_par, char **mots, int *tailles, int nb_mots, long long M);
+long long *calculs_paragraphes(long long num_par, char **mots, long long *tailles, long long nb_mots, long long M);
 
 
 
@@ -142,8 +142,8 @@ long long *calculs_paragraphes(int num_par, char **mots, int *tailles, int nb_mo
  * @param M
  * @param nb_ligne
  */
-void justifier_paragraphe(int num_par, paragraphe paragraphe, char **mots, int *tailles, int nb_mots, long long M,
-                          int nb_ligne);
+void justifier_paragraphe(long long num_par, paragraphe paragraphe, char **mots, long long *tailles, long long nb_mots, long long M,
+                          long long nb_ligne);
 
 
 #endif //TPAODJUSTIFY_AODJUSTIFY_H
